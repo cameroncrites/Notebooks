@@ -1,0 +1,141 @@
+---
+title: Why Nikola Jokic should win NBA MVP
+author: R package build
+date: '2022-03-31'
+slug: why-nikola-jokic-should-win-nba-mvp
+categories: []
+tags: []
+---
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+library(tidyverse)
+library(gt)
+library(cowplot)
+
+mvp <- read_csv("data/mvp_data.csv")
+```
+When watching the NBA, there are multiple players that many fans go out of their way to watch on a nightly basis. Lebron James is arguably the greatest to ever play, Stephen Curry changed the game with his shooting ability, and Giannis Antetokounmpo looks to become the next face of the NBA after winning his first championship last season.
+
+But any invested NBA fan will tell you there is another player that continues to change the way people look at the game. While this player may not be as naturally athletic and flashy as some of the before-mentioned players, this man continues to prove that he belongs in the discussion of being the best player in the world.
+
+Nikola Jokić, a 6'11" center out of Sombor, Serbia has defied the odds and silenced the doubters his entire career. After being drafted in the second round of the 2014 NBA Draft, Jokić quickly ascended into stardom due to his unique play style and build. This all came to a beautiful climax last season when Jokić won the 2020-2021 NBA MVP.
+
+As the 2021-2022 NBA season comes to a close, many are still debating who will take home the seasons MVP trophy. Here is the current top 5 and their probability to win the award.
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+prob <- mvp %>%
+  group_by(Player) %>%
+  summarise(PercentChanceToWinMVP = `Prob%`) %>%
+  mutate(PercentChanceToWinMVP = as.numeric(gsub("%", "", PercentChanceToWinMVP))) %>% 
+  arrange(desc(PercentChanceToWinMVP)) %>% 
+  top_n(5, PercentChanceToWinMVP)
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+prob %>% 
+  gt() %>%
+  tab_header(
+    title = "Nikola Jokić sits as the heavy favorite to win MVP",
+    subtitle = "Jokić is followed by Milwaukee's Giannis Antetokounmpo in the MVP Rankings, but has pulled well ahead of Philadelphia's Joel Embiid"
+  ) %>% 
+  tab_style(
+    style = cell_text(color = "black", weight = "bold", align = "left"),
+  locations = cells_title("title")
+  ) %>% tab_style(
+    style = cell_text(color = "black", align = "left"),
+    locations = cells_title("subtitle")
+  ) %>%
+  tab_source_note(
+    source_note = md("**By:** Cameron Crites  |  **Source:** [Basketball Reference](https://www.basketball-reference.com/friv/mvp.html)")
+  ) %>%
+  tab_style(
+     locations = cells_column_labels(columns = everything()),
+     style = list(
+       cell_borders(sides = "bottom", weight = px(3)),
+       cell_text(weight = "bold", size=12) 
+  )
+)
+```
+With such a high probability to win MVP, most would think that there's not much of a debate as to who should win the award, yet many people within the NBA community, particularly the national media, continue to insist that Jokić should not go back-to-back.
+
+With that being said, let's take a look as to why the probability rankings are correct and the reasons Jokić deserves his second MVP trophy.
+
+The first thing that most fans think of when they think of an MVP is the word "value." This meaning which player adds the most value to his team. One way to look at this is through two primary statistics that greatly affect a player's teammates. Assists and rebounds. 
+
+Both assists and rebounds are important because if a certain player has a lot of each stat, it means they are contributing to their teammates success, and not just their own. Let's take a look at where Jokić ranks among the MVP finalists in combined assists and rebounds per-game this season.
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+stats <- mvp %>%
+  group_by(Player) %>%
+  summarise(
+    AverageAssists = sum(AST),
+    AverageRebounds = sum(TRB)
+  )
+
+statslonger <- stats %>%
+  pivot_longer(
+    cols=starts_with("Average") ,
+    names_to="Stat",
+    values_to="Type")
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+ggplot(statslonger, aes(x=Player, weight=Type, fill=Stat)) + 
+  geom_bar() + 
+  coord_flip() +
+  labs(
+    y = "Total Number of Assists/Rebounds",
+    x = "Player",
+    title = "Every MVP Candidate's Average Assists and Rebounds",
+    subtitle = "Nikola Jokić leads every MVP candidate in combined assists and rebounds per game",
+    caption="Source: Basketball-Reference.com | By Cameron Crites"
+  ) +
+  theme_minimal() + 
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 10),
+    axis.title = element_text(size = 10),
+    panel.grid.minor = element_blank()
+  )
+```
+As seen, Jokić stands above the rest of the MVP candidates in his ability to both rebound and pass the basketball. His ability to accumulate a heavy amount of assists is most impressive considering the fact that he is a center, a position that is not known for passing.
+
+To continue to go against what people know as an average-center, let's take a look at two-point and three-point shooting percentages, two statistics that heavily affect the success of a player.
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+fieldgoalpercent <- mvp %>%
+  select(Player, '2P%', '3P%')
+
+fieldgoalpercentlonger <- fieldgoalpercent %>%
+  pivot_longer(
+    cols=ends_with("P%"),
+    names_to="Two_or_Three_Point",
+    values_to="Field_Goal_Percentage")
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+ggplot() + 
+  geom_bar(data=fieldgoalpercentlonger, aes(x=Player, weight=Field_Goal_Percentage, fill=Two_or_Three_Point)) + 
+  theme_minimal() + 
+  coord_polar()+
+  labs(
+    y = "Combined 2P% and 3P%",
+    x = "Player",
+    title = "Every MVP Candidate's Combined 2P% and 3P% on the Season",
+    subtitle = "Nikola Jokić sits only behind Deandre Ayton in combined 2P% and 3P%",
+    caption="Source: Basketball-Reference.com | By Cameron Crites"
+  ) +
+  theme_minimal() + 
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 10),
+    axis.title = element_text(size = 10),
+    panel.grid.minor = element_blank()
+  )
+```
+As seen above, Jokić is second in combined two-point and three-point percentage behind Phoenix's Deandre Ayton, who has an inflated three-point percentage because he's only shot a couple three pointers the entire season.
+
+The reason these percentages are so impressive is because Jokić puts up "guard-level" numbers when shooting the three pointer, while also having one of the highest two-point percentages in the league alongside other "high-level" centers.
+
+Nonetheless, in the entire history of the NBA, there has never been a center that has shown this much diversity in his skill-set as Jokić has shown thus far. He's truly a remarkable player, and it's time he starts getting the respect he deserves.
+
+
+
+
